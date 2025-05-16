@@ -1,0 +1,44 @@
+логи воркера:
+PS C:\airflow> docker logs airflow-airflow-worker-1 | findstr "process_file"
+[2025-05-15 19:02:38 +0000] [44] [INFO] Starting gunicorn 23.0.0
+[2025-05-15 19:02:38 +0000] [44] [INFO] Listening at: http://[::]:8793 (44)
+[2025-05-15 19:02:38 +0000] [44] [INFO] Using worker: sync
+[2025-05-15 19:02:38 +0000] [45] [INFO] Booting worker with pid: 45
+[2025-05-15 19:02:38 +0000] [46] [INFO] Booting worker with pid: 46
+[2025-05-15 19:02:46,902: WARNING/MainProcess] /home/airflow/.local/lib/python3.12/site-packages/celery/worker/consumer/consumer.py:508: CPendingDeprecationWarning: The broker_connection_retry configuration setting will no longer determine
+whether broker connection retries are made during startup in Celery 6.0 and above.
+If you wish to retain the existing behavior for retrying connections on startup,
+you should set broker_connection_retry_on_startup to True.
+  warnings.warn(
+
+[2025-05-15 19:02:46,913: INFO/MainProcess] Connected to redis://redis:6379/0
+[2025-05-15 19:02:46,916: WARNING/MainProcess] /home/airflow/.local/lib/python3.12/site-packages/celery/worker/consumer/consumer.py:508: CPendingDeprecationWarning: The broker_connection_retry configuration setting will no longer determine
+whether broker connection retries are made during startup in Celery 6.0 and above.
+If you wish to retain the existing behavior for retrying connections on startup,
+you should set broker_connection_retry_on_startup to True.
+  warnings.warn(
+
+[2025-05-15 19:02:46,919: INFO/MainProcess] mingle: searching for neighbors
+[2025-05-15 19:02:47,938: INFO/MainProcess] mingle: all alone
+[2025-05-15 19:02:47,967: INFO/MainProcess] celery@37ee4f4c6db1 ready.
+[2025-05-15 19:11:47,056: INFO/MainProcess] Task airflow.providers.celery.executors.celery_executor_utils.execute_command[646338cf-29d2-420c-b7e0-4ce843b22f30] received
+[2025-05-15 19:11:47,061: INFO/MainProcess] Task airflow.providers.celery.executors.celery_executor_utils.execute_command[9a518abc-8994-45c8-a47c-4c6417a3e664] received
+[2025-05-15 19:11:47,205: INFO/ForkPoolWorker-16] [9a518abc-8994-45c8-a47c-4c6417a3e664] Executing command in Celery: ['airflow', 'tasks', 'run', 'test_task_car', 'process_file', 'manual__2025-05-15T19:11:45.274637+00:00', '--local', '--subdir', 'DAGS_FOLDER/test_car.py']
+[2025-05-15 19:11:47,202: INFO/ForkPoolWorker-15] [646338cf-29d2-420c-b7e0-4ce843b22f30] Executing command in Celery: ['airflow', 'tasks', 'run', 'test_task_car', 'process_file', 'scheduled__2025-05-14T00:00:00+00:00', '--local', '--subdir', 'DAGS_FOLDER/test_car.py']
+[2025-05-15 19:11:47,615: INFO/ForkPoolWorker-15] Filling up the DagBag from /opt/airflow/dags/test_car.py
+[2025-05-15 19:11:47,617: INFO/ForkPoolWorker-16] Filling up the DagBag from /opt/airflow/dags/test_car.py
+[2025-05-15 19:11:51,876: INFO/ForkPoolWorker-16] Running <TaskInstance: test_task_car.process_file manual__2025-05-15T19:11:45.274637+00:00 [queued]> on host 37ee4f4c6db1
+[2025-05-15 19:11:51,912: INFO/ForkPoolWorker-15] Running <TaskInstance: test_task_car.process_file scheduled__2025-05-14T00:00:00+00:00 [queued]> on host 37ee4f4c6db1
+[2025-05-15 19:11:55,213: INFO/ForkPoolWorker-16] Task airflow.providers.celery.executors.celery_executor_utils.execute_command[9a518abc-8994-45c8-a47c-4c6417a3e664] succeeded in 8.151839257000006s: None
+[2025-05-15 19:11:55,244: INFO/ForkPoolWorker-15] Task airflow.providers.celery.executors.celery_executor_utils.execute_command[646338cf-29d2-420c-b7e0-4ce843b22f30] succeeded in 8.184281579999947s: None
+[2025-05-15 19:16:55,464: INFO/MainProcess] Task airflow.providers.celery.executors.celery_executor_utils.execute_command[1f522403-e50e-467e-8c52-4565d4e25f2f] received
+[2025-05-15 19:16:55,476: INFO/ForkPoolWorker-15] [1f522403-e50e-467e-8c52-4565d4e25f2f] Executing command in Celery: ['airflow', 'tasks', 'run', 'test_task_car', 'process_file', 'manual__2025-05-15T19:11:45.274637+00:00', '--local', '--subdir', 'DAGS_FOLDER/test_car.py']
+[2025-05-15 19:16:55,486: INFO/MainProcess] Task airflow.providers.celery.executors.celery_executor_utils.execute_command[814c9587-1460-4f93-aa76-b26cdc63f88d] received
+[2025-05-15 19:16:55,496: INFO/ForkPoolWorker-16] [814c9587-1460-4f93-aa76-b26cdc63f88d] Executing command in Celery: ['airflow', 'tasks', 'run', 'test_task_car', 'process_file', 'scheduled__2025-05-14T00:00:00+00:00', '--local', '--subdir', 'DAGS_FOLDER/test_car.py']
+[2025-05-15 19:16:56,100: INFO/ForkPoolWorker-16] Filling up the DagBag from /opt/airflow/dags/test_car.py
+[2025-05-15 19:16:56,104: INFO/ForkPoolWorker-15] Filling up the DagBag from /opt/airflow/dags/test_car.py
+[2025-05-15 19:16:58,793: INFO/ForkPoolWorker-15] Running <TaskInstance: test_task_car.process_file manual__2025-05-15T19:11:45.274637+00:00 [queued]> on host 37ee4f4c6db1
+[2025-05-15 19:16:58,835: INFO/ForkPoolWorker-16] Running <TaskInstance: test_task_car.process_file scheduled__2025-05-14T00:00:00+00:00 [queued]> on host 37ee4f4c6db1
+[2025-05-15 19:17:00,479: INFO/ForkPoolWorker-15] Task airflow.providers.celery.executors.celery_executor_utils.execute_command[1f522403-e50e-467e-8c52-4565d4e25f2f] succeeded in 5.012829126000042s: None
+[2025-05-15 19:17:00,504: INFO/ForkPoolWorker-16] Task airflow.providers.celery.executors.celery_executor_utils.execute_command[814c9587-1460-4f93-aa76-b26cdc63f88d] succeeded in 5.016811663999988s: None
+PS C:\airflow>
