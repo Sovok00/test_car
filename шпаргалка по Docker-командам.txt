@@ -1,0 +1,53 @@
+1. Основные команды управления контейнерами	
+docker compose up -d	  # Запуск всех сервисов в фоновом режиме
+docker compose down	  # Остановка всех сервисов (без удаления данных)
+docker compose down -v	  # Полная остановка с удалением ВСЕХ данных
+docker compose restart postgres	  # Перезапуск конкретного сервиса (например, postgres)
+docker ps	  # Просмотр запущенных контейнеров
+
+2. Работа с MinIO (S3)
+# Создать бакет в MinIO
+docker compose exec minio-init /bin/sh -c "
+  /usr/bin/mc config host add minio http://minio:9000 airflow airflow123;
+  /usr/bin/mc mb minio/car-prices-bucket;
+  /usr/bin/mc policy set public minio/car-prices-bucket"	
+	
+# Загрузить файл в MinIO (2 способа)	
+# Способ 1: Через временный контейнер
+docker cp cars_20250515.csv airflow-minio-1:/tmp/
+docker compose run --rm minio-init /bin/sh -c 
+"/usr/bin/mc cp /tmp/cars_20250515.csv minio/car-prices-bucket/"	
+# Способ 2: Через веб-интерфейс (http://localhost:9001)	
+	
+
+3. Работа с PostgreSQL	
+docker exec -it airflow-postgres-1 psql -U airflow	  # Подключиться к PostgreSQL интерактивно
+docker exec -it airflow-postgres-1 psql -U airflow -c "\l"	  # Просмотр всех баз данны
+docker exec -it airflow-postgres-1 psql -U airflow -d news_db -c "\dt"	  # Просмотр таблиц в конкретной БД
+docker exec -i airflow-postgres-1 psql -U airflow -d news_db < init-db.sql	  # Выполнить SQL-скрипт из файла
+
+
+4. Просмотр логов	
+docker logs airflow-airflow-webserver-1	  # Логи Airflow Webserver
+docker logs airflow-postgres-1 | findstr "ERROR"	  # Логи PostgreSQL
+docker logs airflow-airflow-webserver-1 | findstr "process_file"	  # Логи конкретной задачи DAG
+
+
+5. Управление DAG	
+docker exec airflow-airflow-webserver-1 ls /opt/airflow/dags	  # Просмотр файлов DAG в контейнере
+# Принудительный запуск DAG (если не срабатывает по расписанию)
+# Делается через веб-интерфейс: http://localhost:8080
+
+
+6. Полезные команды для диагностики	
+docker compose ps	  # Проверить здоровье сервисов
+docker inspect airflow-airflow-webserver-1 | findstr "Env"	  # Просмотреть переменные окружения контейнера
+docker logs airflow-airflow-webserver-1 | findstr "process_file"	  # Логи конкретной задачи DAG
+docker system prune -a	  # Удалить все неиспользуемые данные
+
+Важные нюансы для Windows:
+Все пути к файлам указывайте с двойными слешами (C:\\airflow\\dags)
+Для поиска в логах используйте findstr вместо grep
+Файлы должны быть в формате Unix (LF), а не Windows (CRLF)
+Для файлов инициализации используйте .sql вместо .sh
+
