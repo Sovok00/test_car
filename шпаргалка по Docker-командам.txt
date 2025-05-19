@@ -6,18 +6,26 @@ docker compose restart postgres	  # Перезапуск конкретного 
 docker ps	  # Просмотр запущенных контейнеров
 
 2. Работа с MinIO (S3)
+docker exec airflow-minio-1 mc ls minio		# Проверить список бакетов
+docker exec airflow-minio-1 mc ls minio/car-prices-bucket 	# Проверка содержимого бакета
+
 # Создать бакет в MinIO
-docker compose exec minio-init /bin/sh -c "
+docker compose exec minio /bin/sh -c "
   /usr/bin/mc config host add minio http://minio:9000 airflow airflow123;
   /usr/bin/mc mb minio/car-prices-bucket;
   /usr/bin/mc policy set public minio/car-prices-bucket"	
 	
-# Загрузить файл в MinIO (2 способа)	
-# Способ 1: Через временный контейнер
-docker cp cars_20250515.csv airflow-minio-1:/tmp/
-docker compose run --rm minio-init /bin/sh -c 
-"/usr/bin/mc cp /tmp/cars_20250515.csv minio/car-prices-bucket/"	
-# Способ 2: Через веб-интерфейс (http://localhost:9001)	
+# Загрузить файл в MinIO 
+docker cp cars_20250519.csv airflow-minio-1:/tmp/	# Скопируйте файл в контейнер MinIO
+docker exec airflow-minio-1 mc cp /tmp/cars_20250519.csv minio/car-prices-bucket/	# Загрузите файл в бакет car-prices-bucket
+docker exec airflow-minio-1 mc ls minio/car-prices-bucket/	# Проверьте, что файл загружен
+доп:
+docker exec airflow-minio-1 mc anonymous set public minio/car-prices-bucket/cars_20250519.csv	# Установите права на файл
+
+# Команды для MinIO
+docker exec airflow-minio-1 mc anonymous set public minio/car-prices-bucket	# Сделать весь бакет публичным
+docker exec airflow-minio-1 mc anonymous get minio/car-prices-bucket	# Проверить текущие права
+docker exec airflow-minio-1 mc anonymous set none minio/car-prices-bucket	# Удалить публичный доступ
 	
 
 3. Работа с PostgreSQL	
@@ -25,6 +33,21 @@ docker exec -it airflow-postgres-1 psql -U airflow	  # Подключиться 
 docker exec -it airflow-postgres-1 psql -U airflow -c "\l"	  # Просмотр всех баз данны
 docker exec -it airflow-postgres-1 psql -U airflow -d news_db -c "\dt"	  # Просмотр таблиц в конкретной БД
 docker exec -i airflow-postgres-1 psql -U airflow -d news_db < init-db.sql	  # Выполнить SQL-скрипт из файла
+docker exec airflow-postgres-1 psql -U airflow -c "SELECT * FROM car_prices LIMIT 5;"	  # Проверьте данные в PostgreSQL
+# Вручную создать таблицу в PostgreSQL:
+docker exec airflow-postgres-1 psql -U airflow -c "
+CREATE TABLE IF NOT EXISTS car_prices (
+    car_id SERIAL PRIMARY KEY,
+    brand VARCHAR(100),
+    model VARCHAR(100),
+    engine_volume FLOAT,
+    manufacture_year INTEGER,
+    price_foreign FLOAT,
+    price_rub FLOAT,
+    file_actual_date DATE,
+    processing_date TIMESTAMP,
+    UNIQUE (brand, model, engine_volume, manufacture_year, file_actual_date)
+)"
 
 
 4. Просмотр логов	
