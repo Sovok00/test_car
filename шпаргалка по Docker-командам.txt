@@ -74,3 +74,12 @@ docker system prune -a	  # Удалить все неиспользуемые д
 Файлы должны быть в формате Unix (LF), а не Windows (CRLF)
 Для файлов инициализации используйте .sql вместо .sh
 
+
+Настройка в UI Airflow для отправки сообщений в ТГ:
+Если хотите использовать Connections (более правильный способ):
+Admin → Connections → Add new
+Connection Id: telegram_default
+Connection Type: HTTP
+Host: https://api.telegram.org
+Extra: {"token": "ваш_токен", "chat_id": "ваш_chat_id"}
+
