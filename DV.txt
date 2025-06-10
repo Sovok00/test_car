@@ -1,0 +1,140 @@
+## Что такое Data Vault?
+
+Data Vault (DV) — это методология моделирования данных для хранилищ данных, которая сочетает преимущества 3НФ (нормализованных моделей) и dimensional modeling (звёздных схем). Основные принципы:
+
+- Гибкость: легко добавлять новые источники без изменения существующей структуры
+- Историчность: автоматическое сохранение истории изменений
+- Трассируемость: можно проследить происхождение каждого значения
+
+Пример: представьте библиотеку, где книги (данные) можно легко добавлять, не перестраивая всю систему хранения.
+
+## Основные компоненты Data Vault
+
+### 1. Хаб (Hub)
+Это "стержень" модели, содержит список уникальных бизнес-сущностей.
+
+Пример хаба "Клиент":
+Hub_Customer:
+- Customer_HK (хэш-ключ, например MD5 от ID)
+- Customer_ID (исходный бизнес-ключ)
+- Load_DTS (дата/время загрузки)
+- Record_Source (источник данных)
+### 2. Линк (Link)
+Отражает связи между хабами. Это многие-ко-многим в чистом виде.
+
+Пример линка "Заказ-Товар":
+Link_Order_Product:
+- Order_Product_HK (хэш от Order_ID + Product_ID)
+- Order_HK (ссылка на хаб заказов)
+- Product_HK (ссылка на хаб товаров)
+- Load_DTS
+- Record_Source
+### 3. Сателлит (Satellite)
+Содержит описательные атрибуты и историю их изменений.
+
+Пример сателлита для клиента:
+Sat_Customer_Details:
+- Customer_HK (ссылка на хаб)
+- Load_DTS
+- Name
+- Email
+- Phone
+- Hash_Diff (хэш для определения изменений)
+- Record_Source
+## Перевод таблицы из 3НФ в Data Vault
+
+Исходная таблица в 3НФ:
+Orders:
+- Order_ID (PK)
+- Order_Date
+- Customer_ID (FK)
+- Customer_Name
+- Customer_Email
+- Product_ID (FK)
+- Product_Name
+- Quantity
+- Price
+В Data Vault это превращается в:
+
+1. Хаб Hub_Customer (Customer_ID)
+2. Хаб Hub_Product (Product_ID)
+3. Хаб Hub_Order (Order_ID)
+4. Линк Link_Order_Product (связь Order-Product)
+5. Сателлит Sat_Order_Details (Order_Date, Quantity, Price)
+6. Сателлит Sat_Customer_Details (Name, Email)
+7. Сателлит Sat_Product_Details (Product_Name)
+
+## Расположение Data Vault в слоях данных
+
+Типичная архитектура:
+1. Staging (сырые данные из источников)
+2. Raw Data Vault (чистый DV без бизнес-правил)
+3. Business Data Vault (доп. правила, вычисления)
+4. Dimensional Marts (звёздные схемы для отчётов)
+
+## Data Vault 2.0: ключевые улучшения
+
+1. Гибридные таблицы: объединение хаба и сателлита для простых сущностей
+2. Предопределённые вычисления (Predefined Derivations): заранее рассчитанные метрики в Business Vault
+3. PIT (Point-In-Time) таблицы: ускорение доступа к историческим данным
+4. Мост (Bridge): соединение нескольких сущностей для аналитики
+
+## PIT (Point-In-Time) таблицы
+
+Решают проблему медленного доступа к историческим данным через сателлиты.
+
+Пример PIT для клиента:
+PIT_Customer:
+- Customer_HK
+- Snapshot_Date
+- Sat_Customer_Details_HK (ссылка на актуальную запись на дату)
+- Sat_Customer_Status_HK
+- ...
+## Bridge таблицы
+
+Упрощают доступ к связанным данным для отчётов.
+
+Пример Bridge "Клиент-Заказ-Товар":
+BR_Customer_Order_Product:
+- Customer_HK
+- Order_HK
+- Product_HK
+- Order_Date
+- Quantity
+- Price
+## Predefined Derivations
+
+Вычисляемые поля в Business Vault для ускорения отчётов.
+
+Пример:
+Sat_Order_Calculations:
+- Order_HK
+- Load_DTS
+- Total_Amount (Quantity * Price)
+- Discount_Amount
+- Net_Amount
+## Загрузка Data Vault 2.0
+
+Процесс загрузки обычно включает:
+
+1. Извлечение данных из источников в staging
+2. Определение изменений (по хэшам)
+3. Загрузка в Raw DV (только новые/изменённые данные)
+4. Применение бизнес-правил в Business Vault
+5. Обновление PIT/Bridge таблиц
+6. Подача в витрины данных
+
+Пример ETL-шага для загрузки хаба:
+`sql
+INSERT INTO Hub_Customer (Customer_HK, Customer_ID, Load_DTS, Record_Source)
+SELECT 
+    MD5(Customer_ID) AS Customer_HK,
+    Customer_ID,
+    CURRENT_TIMESTAMP() AS Load_DTS,
+    'ERP_SYSTEM' AS Record_Source
+FROM Staging_Customers
+WHERE NOT EXISTS (
+    SELECT 1 FROM Hub_Customer 
+    WHERE MD5(Customer_ID) = Hub_Customer.Customer_HK
+);
+`
